@@ -1,0 +1,197 @@
+---
+title: "Projeto Integrador Ciência de dados - IMIH"
+subtitle: "Gerson Vasconcelos Neto - Exercício 06"
+date: "Abril de 2018"
+output: html_notebook
+---
+
+
+# Exercícios
+
+-------------------------------------
+
+
+```{r include = FALSE}
+library(descr)
+library(dplyr)
+library(readr)
+
+enade14 <- read_csv2("https://raw.githubusercontent.com/neylsoncrepalde/introducao_ao_r/master/dados/enade_2014_amostra.csv")
+
+```
+
+
+**1.  Escreva uma função que calcule a média, a mediana, a variância e o desvio padrão de um vetor numérico. A função deve retornar os resultados numa matriz. Teste a sua função com uma variável do banco de dados `iris`.**
+
+```{r}
+
+meu_sumario <- function(x) {
+  mdn = median(x)
+  md = mean(x)
+  vari = var(x)
+  desvp = sd(x)
+  
+  dados <- data.frame(media = md, mediana = mdn, variancia = vari, desvio_p = desvp)
+  return(dados)
+   
+}
+
+meu_sumario(iris$Sepal.Length)
+
+```
+
+
+
+
+**2.  Reescreva sua função de modo que ela seja capaz de processar vetores com dados completos e vetores com *missing values*. Deve haver uma opção para o usuário marcar se ele quer a remoção de missings ou não. Teste a sua função com uma variável numérica do banco de dados `enade`. Mostre os resultados COM REMOÇÃO de *missings* e SEM REMOÇÃO.**
+
+
+```{r}
+
+
+meu_sumario2 <- function(x, na.rm = F) {
+    if (na.rm == T){                      
+    x = x[!is.na(x)]   
+    }
+  mdn = median(x)
+  md = mean(x)
+  vari = var(x)
+  desvp = sd(x)
+  
+  dados <- data.frame(media = md, mediana = mdn, variancia = vari, desvio_p = desvp)
+  return(dados)
+   
+}
+
+meu_sumario2(enade14$nt_ger)
+
+meu_sumario2(enade14$nt_ger, na.rm = T)
+
+```
+
+
+
+
+**3.  Reescreva sua função de modo que ela aceite apenas vetores do typo `integer` ou `numeric`. Se o usuário tentar passar um vetor de outro tipo, a função deve exibir um ERRO e uma mensagem com a orientação: "Object is not integer or numeric". *Dica*: use o comando `stop("mensagem")`. Teste a função com uma variável numérica, uma variável integer e um objeto de outro tipo qualquer.**
+
+```{r}
+
+meu_sumario3 <- function(x, na.rm = F) {
+    if(class(x) == "integer" | 
+       class(x) == "numeric") {  
+  if (na.rm == T){                      
+    x = x[!is.na(x)]   
+    }
+  mdn = median(x)
+  md = mean(x)
+  vari = var(x)
+  desvp = sd(x)
+  
+  dados <- data.frame(media = md, mediana = mdn, variancia = vari, desvio_p = desvp)
+  return(dados)
+    }
+  else {
+    stop("Object is not an interger or a numeric.")
+  }
+}
+
+
+
+meu_sumario3(enade14$nt_ger, na.rm = T)  # integer
+meu_sumario3(iris$Sepal.Length)  # numeric
+
+meu_sumario3(iris$Species) # factor
+
+
+
+```
+
+
+
+**4.  Agora, use a função `sapply` para executar sua função para todas as variáveis numéricas do banco de dados `iris`. Execute-a também para as variáveis *idade*, *nota geral*, *nota da formação geral* e *nota do componente específico* do banco de dados `enade`.**
+
+No banco de dados iris:
+
+```{r}
+sapply(iris, class)
+select1 <- iris %>% select(Sepal.Length,
+                           Sepal.Width, 
+                           Petal.Length, 
+                           Petal.Width)
+
+sapply(select1, meu_sumario3, na.rm = T)
+
+```
+
+
+Para o banco de dados do Enade:
+
+```{r}
+select2 <- enade14 %>% select(nu_idade,
+                              nt_fg, nt_ce,
+                              nt_ger)
+
+sapply(select2, meu_sumario3, na.rm = T)
+
+```
+
+
+
+**5.  Sabemos que as variáveis do questionário do estudante do ENADE relacionadas à IES possuem duas categorias que não são úteis para nossa análise, 7 e 8 (Não sei, não se aplica). Essas categorias precisam ser substituídas por `NA's`. Faça a substituição usando uma função programada por você e a função sapply.**
+
+
+```{r}
+
+sub_na <- function(x) {
+  if (is.numeric(x) == T) {
+    x[x == 7 | x == 8] <- NA
+  }
+  return(x)
+}
+
+sub_na(enade14$qe_i27) # testando se 
+
+
+sapply(enade14[,101:142], sub_na)
+
+
+# Neylson, não senti que ficou muito bem feita e nem ficou genérico. Ajuda ai dar uma melhorada
+
+
+
+```
+
+
+
+
+
+
+## Desafio
+-------
+
+**6.  Reescreva a sua função de estatísticas descritivas. Não utilize as funções prontas do `R` mas implemente a média, a variância e o desvio padrão (mediana não) a partir de suas fórmulas.**
+
+
+```{r}
+
+estat_desc <- function(x, na.rm = F) {
+    if (na.rm == T){                      
+    x = x[!is.na(x)]   
+    }
+  med = sum(x) / length(x)
+  desv_qua = (x - med)^2
+  vari = sum(desv_qua)/(length(x) - 1)
+  dv_pd = vari^(1/2)
+  print(paste("Média =", med))
+  print(paste("Variância =", vari))
+  print(paste("Desvio Padrão =", dv_pd))
+}
+
+estat_desc(iris$Sepal.Length)
+```
+
+
+
+
+
+
